@@ -1,4 +1,4 @@
-# You're Fired
+# You're Fired!
 
 A Chrome extension to take back a little bit of control of your news feed - remove unwanted articles and videos by keyword. Works on Reddit, X (formerly Twitter), and YouTube.
 
