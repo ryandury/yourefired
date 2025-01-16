@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Keyword Manager</title>
+  <style>
+    body {
+      width: 300px;
+      height: auto;
+      margin: 0;
+      padding: 10px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      border-radius: 15px; 
+    }
+    input[type="text"] {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin-bottom: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .keyword-list {
+      list-style-type: none;
+      padding: 0;
+      padding-bottom:0;
+    }
+    .keyword-list li {
+      background-color: #f1f1f1;
+      border-radius: 20px;
+      padding: 5px 10px;
+      margin: 5px;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      text-transform: capitalize;
+    }
+  </style>
+</head>
+<body>
+  <form id="keyword-form">
+    <input type="text" id="keyword-input" placeholder="Add to your banned words or phrases">
+  </form>
+  <ul id="keyword-list" class="keyword-list"></ul>
+  <script src="popup.js"></script>
+</body>
+</html>

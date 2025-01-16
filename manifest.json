@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "You're Fired!",
+  "version": "1.0",
+  "description": "Tune out the noise—remove distracting content from your feed",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.reddit.com/*",
+    "https://x.com/*",
+    "https://www.youtube.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.reddit.com/*",
+        "https://x.com/*",
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "youre-fired-16.png",
+      "48": "youre-fired-48.png",
+      "128": "youre-fired-128.png"
+    }
+  },
+  "icons": {
+    "16": "youre-fired-16.png",
+    "48": "youre-fired-48.png",
+    "128": "youre-fired-128.png"
+  }
+}
