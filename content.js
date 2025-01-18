@@ -106,40 +106,7 @@ async function getConfig(forceNew, forceLocal, showElements) {
 class ContentFilter {
     constructor(config) {
         this.config = config;
-        this.initializeStorage();
-        this.mutationCount = 0;
         this.targetSelectors = this.config.websites[window.location.hostname] || false;
-    }
-
-    initializeStorage() {
-        if (!localStorage.getItem('removalCount')) {
-            localStorage.setItem('removalCount', '0');
-        }
-        localStorage.setItem('removalCount', '0');
-    }
-
-    incrementRemovalCount() {
-        let count = parseInt(localStorage.getItem('removalCount'), 10);
-        count = isNaN(count) ? 0 : count + 1;
-        localStorage.setItem('removalCount', count.toString());
-    }
-
-    getTotalCount() {
-        let count = parseInt(localStorage.getItem('removalCount'), 10);
-        return isNaN(count) ? 0 : count;
-    }
-
-    checkImagesForFilters(images, filters) {
-        images.forEach(img => {
-            const altText = img.alt.toLowerCase();
-            const src = img.src.toLowerCase();
-            filters.forEach(filter => {
-                if (altText.includes(filter) || src.includes(filter)) {
-                    img.style.opacity = ''; // or any other action you want to take
-                    img.style.backgroundColor = '#FA8072';
-                }
-            });
-        });
     }
 
     run() {
@@ -202,7 +169,6 @@ class ContentFilter {
 
     handleMutations = (mutationsList, observer) => {
         for (const mutation of mutationsList) {
-
             let matchingNodes = new Set();
 
             if (mutation.type === 'attributes') {
@@ -214,8 +180,6 @@ class ContentFilter {
             if ((mutation.type === 'childList') && mutation.addedNodes.length > 0) {
                 mutation.addedNodes.forEach(addedNode => {
                     if (addedNode.nodeType === Node.ELEMENT_NODE) {
-                  
-
                         if (addedNode.matches && this.targetSelectors.some(selector => addedNode.matches(selector))) {
                             matchingNodes.add(addedNode);
                         }
@@ -223,8 +187,6 @@ class ContentFilter {
                         this.targetSelectors.forEach(selector => {
                             addedNode.querySelectorAll(selector).forEach(el => matchingNodes.add(el));
                         });
-
-                        
                     }
                 });
             }
@@ -235,5 +197,19 @@ class ContentFilter {
                 this.filterNodes(matchingNodes);
             }
         }
+    }
+
+    // Not used atm
+    checkImagesForFilters(images, filters) {
+        images.forEach(img => {
+            const altText = img.alt.toLowerCase();
+            const src = img.src.toLowerCase();
+            filters.forEach(filter => {
+                if (altText.includes(filter) || src.includes(filter)) {
+                    img.style.opacity = ''; // or any other action you want to take
+                    img.style.backgroundColor = '#FA8072';
+                }
+            });
+        });
     }
 }
