@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Keyword Manager</title>
   <style>
@@ -10,20 +11,24 @@
       padding: 10px;
       box-sizing: border-box;
       font-family: Arial, sans-serif;
-      border-radius: 15px; 
+      border-radius: 15px;
     }
+
     input[type="text"] {
       width: calc(100% - 22px);
       padding: 10px;
-      margin-bottom: 5px;
+      margin-bottom: 0;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
+
     .keyword-list {
       list-style-type: none;
       padding: 0;
-      padding-bottom:0;
+      padding-bottom: 0;
+      margin: 15px 0;
     }
+
     .keyword-list li {
       background-color: #f1f1f1;
       border-radius: 20px;
@@ -34,13 +39,39 @@
       align-items: center;
       text-transform: capitalize;
     }
+
+    #reveal-checkbox {
+      transform: scale(1.2);
+      accent-color: #007BFF;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      margin-top: 10px;
+      color: #5c5c5c;
+      user-select: none;
+    }
+
+    label input[type="checkbox"] {
+      margin-right: 10px;
+    }
   </style>
 </head>
+
 <body>
   <form id="keyword-form">
     <input type="text" id="keyword-input" placeholder="Add to your banned words or phrases">
+
+    <ul id="keyword-list" class="keyword-list"></ul>
+
+    <label>
+      <input type="checkbox" id="reveal-checkbox">
+      Reveal targeted content on next reload
+    </label>
   </form>
-  <ul id="keyword-list" class="keyword-list"></ul>
   <script src="popup.js"></script>
 </body>
+
 </html>

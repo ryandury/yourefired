@@ -2,15 +2,16 @@ document.addEventListener('DOMContentLoaded', async function() {
   const keywordForm = document.getElementById('keyword-form');
   const keywordInput = document.getElementById('keyword-input');
   const keywordList = document.getElementById('keyword-list');
+  const revealCheckbox = document.getElementById('reveal-checkbox');
 
   keywordInput.focus();
 
-
   const result = await new Promise((resolve) => {
-    chrome.storage.local.get(['keywords'], resolve);
+    chrome.storage.local.get(['keywords', 'revealCheckboxState'], resolve);
   });
-  console.log('result',result)
+  console.log('result', result);
   const keywords = result.keywords || ['trump'];
+  revealCheckbox.checked = result.revealCheckboxState || false;
 
   function renderKeywords() {
     keywordList.innerHTML = '';
@@ -47,19 +48,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
 
-  keywordForm.addEventListener('submit', async function(event) {
-    event.preventDefault();
-    const keyword = keywordInput.value.trim();
-    if (keyword && !keywords.includes(keyword)) {
-      keywords.push(keyword);
-      await new Promise((resolve) => {
-        chrome.storage.local.set({ keywords: keywords }, resolve);
-      });
-      renderKeywords();
-      keywordInput.value = '';
-    }
+  revealCheckbox.addEventListener('change', function() {
+    chrome.storage.local.set({ revealCheckboxState: revealCheckbox.checked }, () => {
+      console.log('Checkbox state saved:', revealCheckbox.checked);
+    });
   });
 
+  keywordForm.addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const input = keywordInput.value.trim();
+    if (input) {
+      const newKeywords = input.split(',').map(kw => kw.trim()).filter(kw => kw && !keywords.includes(kw));
+      if (newKeywords.length > 0) {
+        keywords.push(...newKeywords);
+        await new Promise((resolve) => {
+          chrome.storage.local.set({ keywords: keywords }, resolve);
+        });
+        renderKeywords();
+        keywordInput.value = '';
+      }
+    }
+  });
 
   renderKeywords();
 });

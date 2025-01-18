@@ -9,14 +9,18 @@
   "host_permissions": [
     "https://www.reddit.com/*",
     "https://x.com/*",
-    "https://www.youtube.com/*"
+    "https://www.youtube.com/*",
+    "https://www.threads.net/*",
+    "https://www.facebook.com/*"
   ],
   "content_scripts": [
     {
       "matches": [
         "https://www.reddit.com/*",
         "https://x.com/*",
-        "https://www.youtube.com/*"
+        "https://www.youtube.com/*",
+        "https://www.threads.net/*",
+        "https://www.facebook.com/*"
       ],
       "js": [
         "content.js"

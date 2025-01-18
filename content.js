@@ -1,11 +1,12 @@
-(async () => {
-    const config = await getConfig(true, true);
-    const contentFilter = new ContentFilter(config);
-    contentFilter.run();
+(async function () {
+    const config = await getConfig();
+    const filter = new ContentFilter(config);
+    filter.run();
 })();
 
-async function getConfig(forceNew, forceLocal) {
+async function getConfig(forceNew, forceLocal, showElements) {
     const defaultConfig = {
+        showElements: showElements,
         filters: [
             "Trump",
         ],
@@ -22,38 +23,55 @@ async function getConfig(forceNew, forceLocal) {
             "www.reddit.com": [
                 "article",
                 "li",
-                "shreddit-comment"
+                "shreddit-comment",
+                "shreddit-ad-post"
+            ],
+            "www.threads.net": [
+                "div[data-pressable-container]"
+            ],
+            "www.facebook.com": [
+                "div[data-virtualized]"
             ],
             "x.com": [
-                'article',
+                "article"
             ],
-
         }
     };
 
     let config = { ...defaultConfig };
 
     const storedKeywords = await new Promise((resolve) => {
-        chrome.storage.local.get(['keywords'], function(result) {
+        chrome.storage.local.get(['keywords'], function (result) {
             resolve(result.keywords);
         });
     });
-    
+
     if (storedKeywords) {
         config.filters = storedKeywords;
     }
 
+    const revealCheckboxState = await new Promise((resolve) => {
+        chrome.storage.local.get(['revealCheckboxState'], function (result) {
+            resolve(result.revealCheckboxState);
+        });
+    });
+
+    if (typeof revealCheckboxState !== 'undefined') {
+        config.showElements = revealCheckboxState;
+    }
+
     if (forceLocal) {
+        console.log('- WARNING: Using local config -');
         return config;
     }
 
     try {
         const cacheKey = 'cachedWebsites';
         const cacheTimestampKey = 'cacheTimestamp';
-        const expiry = 12 * 60 * 60 * 1000;
+        const expiry = 1 * 60 * 60 * 1000;
 
         const { cachedWebsites, cacheTimestamp } = await new Promise((resolve) => {
-            chrome.storage.local.get([cacheKey, cacheTimestampKey], function(result) {
+            chrome.storage.local.get([cacheKey, cacheTimestampKey], function (result) {
                 resolve({
                     cachedWebsites: result[cacheKey],
                     cacheTimestamp: result[cacheTimestampKey]
@@ -65,7 +83,7 @@ async function getConfig(forceNew, forceLocal) {
 
         if (cachedWebsites && cacheTimestamp && (now - cacheTimestamp < expiry) && !forceNew) {
             config.websites = JSON.parse(cachedWebsites);
-            //console.log('Using cached websites:', config);
+            console.log('Using cached websites:', config);
         } else {
             // Fetches config daily to stay updated with website changes without updating the extension.
             const response = await fetch('https://www.yourefi.red/api/config.json');
@@ -75,7 +93,7 @@ async function getConfig(forceNew, forceLocal) {
                 [cacheTimestampKey]: now.toString()
             });
             config.websites = configRes.websites;
-            //console.log('Fetching websites:', config);
+            console.log('Fetching websites:', config);
         }
 
         return config;
@@ -85,13 +103,12 @@ async function getConfig(forceNew, forceLocal) {
     }
 }
 
-
 class ContentFilter {
     constructor(config) {
         this.config = config;
         this.initializeStorage();
         this.mutationCount = 0;
-        this.elements = this.config.websites[window.location.hostname] || false;
+        this.targetSelectors = this.config.websites[window.location.hostname] || false;
     }
 
     initializeStorage() {
@@ -126,7 +143,7 @@ class ContentFilter {
     }
 
     run() {
-        if (!this.elements) 
+        if (!this.targetSelectors)
             return;
 
         this.findElements();
@@ -134,64 +151,89 @@ class ContentFilter {
     }
 
     findElements() {
-        const elements = document.querySelectorAll(this.elements.join(','));
-        this.filterElements(elements);
-    }
-
-    filterElements(elements) {
-        elements.forEach(element => {
-            this.config.filters.forEach(filter => {
-            const variations = [filter.toLowerCase(), `${filter.toLowerCase()}'s`, `${filter.toLowerCase()}s`];
-            const regex = new RegExp(`\\b(${variations.join('|')})\\b`, 'i');
-            if (regex.test(element.textContent.toLowerCase())) {
-                //console.log(`Found filter "${filter}" in element:`, element);
-                //element.style.opacity = '0.2';
-                element.remove();
-            }
-            });
-        });
+        const elements = document.querySelectorAll(this.targetSelectors.join(','));
+        this.filterNodes(elements);
     }
 
     observeMutations() {
         if (document.body) {
-            const observer = new MutationObserver(this.observerCallback);
+            const observer = new MutationObserver(this.handleMutations);
 
             observer.observe(document.body, {
                 childList: true,
-                subtree: true
+                subtree: true,
+                attributes: true,
             });
         }
     }
 
-    observerCallback = (mutationsList, observer) => {
+    parseTextContent = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent.trim();
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            return Array.from(node.childNodes)
+                .map(this.parseTextContent)
+                .filter(Boolean)
+                .join(' ');
+        }
+        return '';
+    }
+
+    filterNodes(elements) {
+        elements.forEach(element => {
+            this.config.filters.forEach(filter => {
+                const variations = [filter.toLowerCase(), `${filter.toLowerCase()}'s`, `${filter.toLowerCase()}s`];
+                const regex = new RegExp(`\\b(${variations.join('|')})\\b`, 'i');
+                const textContents = this.parseTextContent(element);
+
+                if (regex.test(textContents.toLowerCase())) {
+                    //console.log(`Found filter "${filter}" in element:`, element);
+
+                    if (this.config.showElements) {
+                        element.style.border = '2px solid red';
+                        element.style.opacity = '0.5';
+                    } else {
+                        element.remove();
+                    }
+                }
+            });
+        });
+    }
+
+    handleMutations = (mutationsList, observer) => {
         for (const mutation of mutationsList) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-    
-                        if (node.shadowRoot) {
-                            const shadowObserver = new MutationObserver(this.observerCallback);
-                            shadowObserver.observe(node.shadowRoot, {
-                                childList: true,
-                                subtree: true
-                            });
+
+            let matchingNodes = new Set();
+
+            if (mutation.type === 'attributes') {
+                if (this.targetSelectors.some(selector => mutation.target.matches(selector))) {
+                    matchingNodes.add(mutation.target);
+                }
+            }
+
+            if ((mutation.type === 'childList') && mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(addedNode => {
+                    if (addedNode.nodeType === Node.ELEMENT_NODE) {
+                  
+
+                        if (addedNode.matches && this.targetSelectors.some(selector => addedNode.matches(selector))) {
+                            matchingNodes.add(addedNode);
                         }
-    
-                        let elements = [];
-    
-                        if (node.matches && this.elements.some(selector => node.matches(selector))) {
-                            elements.push(node);
-                        }
-    
-                        this.elements.forEach(selector => {
-                            elements.push(...node.querySelectorAll(selector));
+
+                        this.targetSelectors.forEach(selector => {
+                            addedNode.querySelectorAll(selector).forEach(el => matchingNodes.add(el));
                         });
-    
-                        this.filterElements(elements);
+
+                        
                     }
                 });
             }
+
+            matchingNodes = Array.from(matchingNodes);
+
+            if (matchingNodes.length > 0) {
+                this.filterNodes(matchingNodes);
+            }
         }
     }
-
 }
