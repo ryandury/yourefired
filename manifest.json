@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "You're Fired!",
   "version": "1.2",
-  "description": "Tune out the noise—remove unwanted articles and videos from popular social media sites. Simply choose the keywords of your choice and let the extension do the rest. Removes content from reddit, x, youtube, threads and facebook.",
+  "description": "Remove unwanted articles and videos from social media sites by choosing keywords. Supports reddit, x, youtube, threads, and facebook",
   "permissions": [
     "storage"
   ],
