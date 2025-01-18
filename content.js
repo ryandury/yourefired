@@ -83,9 +83,9 @@ async function getConfig(forceNew, forceLocal, showElements) {
 
         if (cachedWebsites && cacheTimestamp && (now - cacheTimestamp < expiry) && !forceNew) {
             config.websites = JSON.parse(cachedWebsites);
-            console.log('Using cached websites:', config);
+            //console.log('Using cached websites:', config);
         } else {
-            // Fetches config daily to stay updated with website changes without updating the extension.
+            // Fetches website selectors hourly to stay on top of website changes without updating the extension.
             const response = await fetch('https://www.yourefi.red/api/config.json');
             const configRes = await response.json();
             chrome.storage.local.set({
@@ -93,7 +93,7 @@ async function getConfig(forceNew, forceLocal, showElements) {
                 [cacheTimestampKey]: now.toString()
             });
             config.websites = configRes.websites;
-            console.log('Fetching websites:', config);
+            //console.log('Fetching websites:', config);
         }
 
         return config;
