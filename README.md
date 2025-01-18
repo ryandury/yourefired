@@ -1,11 +1,11 @@
 # You're Fired!
 
-A Chrome extension to take back a little bit of control of your news feed - remove unwanted articles and videos by keyword. Works on Reddit, X (formerly Twitter), Facebook, Threads and YouTube.
+A Chrome extension to take back a little bit of control of your news feed - remove unwanted articles and videos by keyword. Works on Reddit, X, Facebook, Threads and YouTube.
 
 ## Features
 
 - Remove articles and videos by keyword
-- Works on multiple platforms: Reddit, X, and YouTube
+- Works on multiple platforms: Reddit, X, Facebook, Threads and YouTube.
 - Easy to use: simply add keywords or phrases in the extension popup
 
 ## Installation
